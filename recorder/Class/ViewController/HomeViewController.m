@@ -8,6 +8,7 @@
 #import "HomeViewController.h"
 #import "HomeTableViewCell.h"
 #import "RecorderViewController.h"
+#import "AudioTool.h"
 
 #define RecorderDataKey @"XRecorderDataKey"
 
@@ -63,6 +64,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    [AudioTool.tool startPlayWithModel:self.dataArray[indexPath.row]];
 }
 
 #pragma mark - event

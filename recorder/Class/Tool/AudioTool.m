@@ -9,7 +9,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "RecorderModel.h"
 
-@interface AudioTool () <AVAudioRecorderDelegate, AVAudioPlayerDelegate>
+@interface AudioTool ()
 
 @property (nonatomic, strong) AVAudioRecorder *audioRecorder;
 
@@ -28,6 +28,15 @@
     return tool;
 }
 
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        [AVAudioSession.sharedInstance setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
+        [AVAudioSession.sharedInstance setActive:YES error:nil];
+    }
+    return self;
+}
+
 - (void)authorization {
     AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
     if (authStatus == AVAuthorizationStatusNotDetermined) {
@@ -39,6 +48,7 @@
 - (void)startRecorderWithModel:(RecorderModel *)model {
     [self stopRecorder];
     if (!model) return;
+    //
     NSURL *url = [NSURL URLWithString:model.recorderPath];
     NSDictionary *settings = @{AVEncoderAudioQualityKey : [NSNumber numberWithInteger:AVAudioQualityLow],
                                AVEncoderBitRateKey : [NSNumber numberWithInteger:16],
@@ -47,8 +57,10 @@
     NSError *error;
     _audioRecorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
     if (!error) {
-        _audioRecorder.delegate = self;
-        [_audioRecorder record];
+        _audioRecorder.meteringEnabled = YES;
+        if ([_audioRecorder prepareToRecord]) {
+            [_audioRecorder record];
+        }
     }
 }
 
@@ -62,12 +74,21 @@
 - (void)startPlayWithModel:(RecorderModel *)model {
     [self stopPlay];
     if (!model) return;
+    //
+    NSURL *url = [NSURL URLWithString:model.recorderPath];
+    NSError *error;
+    _audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+    _audioPlayer.numberOfLoops = 0;
+    if (!error) {
+        [_audioPlayer play];
+    } else {
+        NSLog(@"%s - %@", __func__, error);
+    }
 }
 
 - (void)stopPlay {
     if (_audioPlayer) {
         [_audioPlayer stop];
-        _audioPlayer.delegate = self;
         _audioPlayer = nil;
     }
 }
