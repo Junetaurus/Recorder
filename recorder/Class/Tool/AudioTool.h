@@ -9,17 +9,22 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class RecorderModel;
+
 @interface AudioTool : NSObject
 
 + (instancetype)tool;
 
+//授权
+- (void)authorization;
+
 //录音
-- (void)startRecorder;
+- (void)startRecorderWithModel:(RecorderModel *)model;
 
 - (void)stopRecorder;
 
 //播放
-- (void)startPlay;
+- (void)startPlayWithModel:(RecorderModel *)model;
 
 - (void)stopPlay;
 

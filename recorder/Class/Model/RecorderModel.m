@@ -30,8 +30,12 @@
 - (NSString *)recorderPath {
     if (!_recorderPath) {
         NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-        NSString *pathName = [@"XRecorder" stringByAppendingPathComponent:self.recorderId];
+        NSString *pathName = [@"XRecorder" stringByAppendingPathComponent:[self.recorderId stringByAppendingString:@".caf"]];
         _recorderPath = [path stringByAppendingPathComponent:pathName];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+       if (![fileManager fileExistsAtPath:_recorderPath]) {
+           [fileManager createDirectoryAtPath:_recorderPath withIntermediateDirectories:YES attributes:nil error:nil];
+       }
     }
     return _recorderPath;
 }

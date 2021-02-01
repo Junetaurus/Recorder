@@ -6,6 +6,7 @@
 //
 
 #import "RecorderViewController.h"
+#import "AudioTool.h"
 
 @interface RecorderViewController ()
 
@@ -26,6 +27,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    [AudioTool.tool authorization];
     [self.view addSubview:self.closeBtn];
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.textField];
@@ -74,11 +76,13 @@
     _stopBtn.enabled = YES;
     //
     _model = [[RecorderModel alloc] init];
+    [AudioTool.tool startRecorderWithModel:_model];
 }
 
 - (void)endRecorder {
     _startBtn.enabled = YES;
     _stopBtn.enabled = NO;
+    [AudioTool.tool stopRecorder];
     //
     if (_model) {
         if (_textField.text.length) {
