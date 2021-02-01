@@ -79,10 +79,11 @@
     NSError *error;
     _audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
     _audioPlayer.numberOfLoops = 0;
+    _audioPlayer.volume = 1.0;
     if (!error) {
-        [_audioPlayer play];
-    } else {
-        NSLog(@"%s - %@", __func__, error);
+        if ([_audioPlayer prepareToPlay]) {
+            [_audioPlayer play];
+        }
     }
 }
 
