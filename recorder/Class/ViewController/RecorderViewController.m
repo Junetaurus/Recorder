@@ -8,12 +8,15 @@
 #import "RecorderViewController.h"
 #import "AudioTool.h"
 
-@interface RecorderViewController ()
+@interface RecorderViewController () <AudioToolDelegate>
 
 @property (nonatomic, strong) UIButton *closeBtn;
 
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UITextField *textField;
+@property (nonatomic, strong) UILabel *timeLabel;
+@property (nonatomic, strong) NSTimer *timer;
+@property (nonatomic, assign) NSUInteger countdownTime;
 
 @property (nonatomic, strong) UIButton *startBtn;
 @property (nonatomic, strong) UIButton *stopBtn;
@@ -28,9 +31,11 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     [AudioTool.tool authorization];
+    AudioTool.tool.delegate = self;
     [self.view addSubview:self.closeBtn];
     [self.view addSubview:self.titleLabel];
     [self.view addSubview:self.textField];
+    [self.view addSubview:self.timeLabel];
     [self.view addSubview:self.startBtn];
     [self.view addSubview:self.stopBtn];
 }
@@ -50,6 +55,9 @@
     _textField.centerX = _titleLabel.centerX;
     _textField.y = _titleLabel.y + _titleLabel.height + 15;
     
+    [_timeLabel sizeToFit];
+    _timeLabel.center = self.view.center;
+    
     [_startBtn sizeToFit];
     _startBtn.x = self.view.centerX - _startBtn.width - 30;
     _startBtn.y = self.view.height * 0.65;
@@ -67,7 +75,7 @@
         [self startRecorder];
     }
     if (btn == _stopBtn) {
-        [self endRecorder];
+        [self stopRecorder];
     }
 }
 
@@ -77,18 +85,38 @@
     //
     _model = [[RecorderModel alloc] init];
     [AudioTool.tool startRecorderWithModel:_model];
+    //
+    self.timer.fireDate = NSDate.date;
 }
 
-- (void)endRecorder {
+- (void)stopRecorder {
     _startBtn.enabled = YES;
     _stopBtn.enabled = NO;
+    //
     [AudioTool.tool stopRecorder];
     //
-    if (_model) {
-        if (_textField.text.length) {
-            _model.recorderName = _textField.text;
+    [_timer invalidate];
+    _timer = nil;
+    _timeLabel.text = @"00 : 00";
+}
+
+- (void)countdown {
+    _countdownTime += 1;
+    //
+    NSInteger minute = _countdownTime / 60;
+    NSInteger second = _countdownTime % 60;
+    _timeLabel.text = [NSString stringWithFormat:@"%.2ld : %.2ld", (long) minute, (long) second];
+}
+
+#pragma mark - AudioToolDelegate
+- (void)audioToolResult:(AudioType)audioType error:(NSError *)error {
+    if (audioType == AudioTypeRecorder) {
+        if (!error) {
+            if (_textField.text.length) {
+                _model.recorderName = _textField.text;
+            }
+            !_recorderBlock ? : _recorderBlock(_model);
         }
-        !_recorderBlock ? : _recorderBlock(_model);
     }
 }
 
@@ -117,8 +145,8 @@
     if (!_stopBtn) {
         _stopBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         _stopBtn.enabled = NO;
-        [_stopBtn setImage:[UIImage imageNamed:@"end"] forState:UIControlStateNormal];
-        [_stopBtn setImage:[UIImage imageNamed:@"end"] forState:UIControlStateHighlighted];
+        [_stopBtn setImage:[UIImage imageNamed:@"stop"] forState:UIControlStateNormal];
+        [_stopBtn setImage:[UIImage imageNamed:@"stop"] forState:UIControlStateHighlighted];
         [_stopBtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _stopBtn;
@@ -139,9 +167,28 @@
         _textField.placeholder = @"我的录音";
         _textField.font = [UIFont systemFontOfSize:15];
         _textField.textAlignment = NSTextAlignmentCenter;
-        _textField.borderStyle = UITextBorderStyleBezel;
+        _textField.borderStyle = UITextBorderStyleLine;
     }
     return _textField;
+}
+
+- (UILabel *)timeLabel {
+    if (!_timeLabel) {
+        _timeLabel = [[UILabel alloc] init];
+        _timeLabel.text = @"00 : 00";
+        _timeLabel.font = [UIFont monospacedDigitSystemFontOfSize:16 weight:UIFontWeightRegular];
+    }
+    return _timeLabel;
+}
+
+- (NSTimer *)timer {
+    if (!_timer) {
+        __weak typeof(self)weakSelf = self;
+        _timer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+            [weakSelf countdown];
+        }];
+    }
+    return _timer;
 }
 
 @end

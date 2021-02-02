@@ -28,12 +28,12 @@
 }
 
 - (NSString *)recorderPath {
-    if (!_recorderPath) {
-        NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-        NSString *fileName = [NSString stringWithFormat:@"%@%@%@", @"XRecorder", self.recorderId, @".caf"];
-        _recorderPath = [path stringByAppendingPathComponent:fileName];
+    NSString *filePath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"XRecorder"];
+    if (![NSFileManager.defaultManager fileExistsAtPath:filePath]) {
+        [NSFileManager.defaultManager createDirectoryAtPath:filePath withIntermediateDirectories:YES attributes:nil error:nil];
     }
-    return _recorderPath;
+    NSString *fileName = [NSString stringWithFormat:@"%@%@", self.recorderId, @".caf"];
+    return [filePath stringByAppendingPathComponent:fileName];
 }
 
 - (NSString *)getCurrentTime {

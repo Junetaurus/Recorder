@@ -46,7 +46,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     HomeTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(HomeTableViewCell.class)];
-    [cell bindModel:self.dataArray[indexPath.row]];
+    [cell bindModel:_dataArray[indexPath.row]];
     return cell;
 }
 
@@ -64,25 +64,42 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [AudioTool.tool startPlayWithModel:self.dataArray[indexPath.row]];
+    [AudioTool.tool startPlayWithModel:_dataArray[indexPath.row]];
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        RecorderModel *model = _dataArray[indexPath.row];
+        if ([AudioTool.tool deleteRecorderWithModel:model]) {
+            [_dataArray removeObject:model];
+            [_tableView reloadData];
+            [self storageRecorderData];
+        }
+    }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return @"删除";
 }
 
 #pragma mark - event
 - (void)btnClick:(UIButton *)btn {
-    RecorderViewController *recorderVC = [[RecorderViewController alloc] init];
-    recorderVC.modalPresentationStyle = UIModalPresentationFullScreen;
-    __weak typeof(self)weakSelf = self;
-    recorderVC.recorderBlock = ^(RecorderModel * _Nonnull model) {
-        [weakSelf.dataArray addObject:model];
-        [weakSelf.tableView reloadData];
-        [weakSelf storageRecorderData];
-    };
-    [self presentViewController:recorderVC animated:YES completion:nil];
+    if (btn == _recorderBtn) {
+        RecorderViewController *recorderVC = [[RecorderViewController alloc] init];
+        recorderVC.modalPresentationStyle = UIModalPresentationFullScreen;
+        __weak typeof(self)weakSelf = self;
+        recorderVC.recorderBlock = ^(RecorderModel * _Nonnull model) {
+            [weakSelf.dataArray addObject:model];
+            [weakSelf.tableView reloadData];
+            [weakSelf storageRecorderData];
+        };
+        [self presentViewController:recorderVC animated:YES completion:nil];
+    }
 }
 
 - (void)storageRecorderData {
-    NSMutableArray *dataArray = [NSMutableArray arrayWithCapacity:self.dataArray.count];
-    for (RecorderModel *model in self.dataArray) {
+    NSMutableArray *dataArray = [NSMutableArray arrayWithCapacity:_dataArray.count];
+    for (RecorderModel *model in _dataArray) {
         NSData *data = [NSKeyedArchiver archivedDataWithRootObject:model];
         [dataArray addObject:data];
     }

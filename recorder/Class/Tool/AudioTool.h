@@ -9,11 +9,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(NSUInteger, AudioType) {
+    AudioTypeRecorder,
+    AudioTypePlay,
+};
+
+@protocol AudioToolDelegate <NSObject>
+
+@optional
+
+- (void)audioToolResult:(AudioType)audioType error:(NSError *)error;
+
+@end
+
 @class RecorderModel;
 
 @interface AudioTool : NSObject
 
 + (instancetype)tool;
+
+@property (nonatomic, weak) id<AudioToolDelegate> delegate;
 
 //授权
 - (void)authorization;
@@ -22,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)startRecorderWithModel:(RecorderModel *)model;
 
 - (void)stopRecorder;
+
+- (BOOL)deleteRecorderWithModel:(RecorderModel *)model;
 
 //播放
 - (void)startPlayWithModel:(RecorderModel *)model;

@@ -9,7 +9,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "RecorderModel.h"
 
-@interface AudioTool ()
+@interface AudioTool () <AVAudioRecorderDelegate>
 
 @property (nonatomic, strong) AVAudioRecorder *audioRecorder;
 
@@ -49,14 +49,8 @@
     [self stopRecorder];
     if (!model) return;
     //
-    NSURL *url = [NSURL URLWithString:model.recorderPath];
-    NSDictionary *settings = @{AVEncoderAudioQualityKey : [NSNumber numberWithInteger:AVAudioQualityLow],
-                               AVEncoderBitRateKey : [NSNumber numberWithInteger:16],
-                               AVSampleRateKey : [NSNumber numberWithFloat:8000],
-                               AVNumberOfChannelsKey : [NSNumber numberWithInteger:2]};
-    NSError *error;
-    _audioRecorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
-    if (!error) {
+    _audioRecorder = [self audioRecorderWithPath:model.recorderPath];
+    if (_audioRecorder) {
         _audioRecorder.meteringEnabled = YES;
         if ([_audioRecorder prepareToRecord]) {
             [_audioRecorder record];
@@ -67,20 +61,23 @@
 - (void)stopRecorder {
     if (_audioRecorder) {
         [_audioRecorder stop];
+        _audioPlayer.delegate = nil;
         _audioRecorder = nil;
     }
+}
+
+- (BOOL)deleteRecorderWithModel:(RecorderModel *)model {
+    [self stopPlay];
+    NSError *error;
+    return [NSFileManager.defaultManager removeItemAtPath:model.recorderPath error:&error];
 }
 
 - (void)startPlayWithModel:(RecorderModel *)model {
     [self stopPlay];
     if (!model) return;
     //
-    NSURL *url = [NSURL URLWithString:model.recorderPath];
-    NSError *error;
-    _audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
-    _audioPlayer.numberOfLoops = 0;
-    _audioPlayer.volume = 1.0;
-    if (!error) {
+    _audioPlayer = [self audioPlayerWithPath:model.recorderPath];
+    if (_audioPlayer) {
         if ([_audioPlayer prepareToPlay]) {
             [_audioPlayer play];
         }
@@ -92,6 +89,53 @@
         [_audioPlayer stop];
         _audioPlayer = nil;
     }
+}
+
+#pragma mark - AVAudioRecorderDelegate
+- (void)audioRecorderDidFinishRecording:(AVAudioRecorder *)recorder successfully:(BOOL)flag {
+    NSError *error;
+    if (!flag) error = [NSError errorWithDomain:NSFilePathErrorKey code:100 userInfo:nil];
+    if ([_delegate respondsToSelector:@selector(audioToolResult:error:)]) {
+        [_delegate audioToolResult:AudioTypeRecorder error:error];
+    }
+}
+
+- (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder *)recorder error:(NSError * __nullable)error {
+    if ([_delegate respondsToSelector:@selector(audioToolResult:error:)]) {
+        [_delegate audioToolResult:AudioTypeRecorder error:error];
+    }
+}
+
+#pragma mark - getter
+- (AVAudioRecorder *)audioRecorderWithPath:(NSString *)path {
+    if (path) {
+        NSURL *url = [NSURL URLWithString:path];
+        NSDictionary *settings = @{AVEncoderAudioQualityKey : [NSNumber numberWithInteger:AVAudioQualityLow],
+                                   AVEncoderBitRateKey : [NSNumber numberWithInteger:16],
+                                   AVSampleRateKey : [NSNumber numberWithFloat:8000],
+                                   AVNumberOfChannelsKey : [NSNumber numberWithInteger:2]};
+        NSError *error;
+        AVAudioRecorder *audioRecorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
+        audioRecorder.delegate = self;
+        if (!error) {
+            return audioRecorder;
+        }
+    }
+    return nil;
+}
+
+- (AVAudioPlayer *)audioPlayerWithPath:(NSString *)path {
+    if (path) {
+        NSURL *url = [NSURL URLWithString:path];
+        NSError *error;
+        AVAudioPlayer *audioPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
+        audioPlayer.numberOfLoops = 0;
+        audioPlayer.volume = 1.0;
+        if (!error) {
+            return audioPlayer;
+        }
+    }
+    return nil;
 }
 
 @end

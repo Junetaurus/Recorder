@@ -13,6 +13,7 @@
 
 @property (nonatomic, strong) UILabel *nameLabel;
 @property (nonatomic, strong) UILabel *timeLabel;
+@property (nonatomic, strong) UIImageView *playImageView;
 
 @end
 
@@ -27,6 +28,7 @@
     if (self) {
         [self.contentView addSubview:self.nameLabel];
         [self.contentView addSubview:self.timeLabel];
+        [self.contentView addSubview:self.playImageView];
     }
     return self;
 }
@@ -55,6 +57,10 @@
     CGFloat margin = ([self.class cellHeight] - _nameLabel.height - _timeLabel.height)/3;
     _nameLabel.y = margin;
     _timeLabel.y = self.height - margin - _timeLabel.height;
+    
+    [_playImageView sizeToFit];
+    _playImageView.x = self.width - _playImageView.width - 20;
+    _playImageView.y = (self.height - _playImageView.height)/2;
 }
 
 #pragma mark - getter
@@ -73,6 +79,14 @@
         _timeLabel.textColor = [UIColor grayColor];
     }
     return _timeLabel;
+}
+
+- (UIImageView *)playImageView {
+    if (!_playImageView) {
+        _playImageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"play"]];
+        _playImageView.hidden = YES;
+    }
+    return _playImageView;
 }
 
 @end
