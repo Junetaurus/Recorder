@@ -17,6 +17,7 @@
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray <RecorderModel *> *dataArray;
 @property (nonatomic, strong) UIButton *recorderBtn;
+@property (nonatomic, strong) NSIndexPath *lastIndexPath;
 
 @end
 
@@ -63,8 +64,31 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [AudioTool.tool startPlayWithModel:_dataArray[indexPath.row]];
+    RecorderModel *model = _dataArray[indexPath.row];
+    HomeTableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    if (!_lastIndexPath) {
+        cell.playImageView.hidden = NO;
+        [AudioTool.tool startPlayWithModel:model];
+    } else {
+        if (_lastIndexPath == indexPath) {
+            if (cell.playImageView.hidden) {
+                cell.playImageView.hidden = NO;
+                [AudioTool.tool startPlayWithModel:model];
+            } else {
+                cell.playImageView.hidden = YES;
+                [AudioTool.tool stopPlay];
+            }
+            
+        } else {
+            HomeTableViewCell *lastCell = [tableView cellForRowAtIndexPath:_lastIndexPath];
+            lastCell.playImageView.hidden = YES;
+            [AudioTool.tool stopPlay];
+            //
+            cell.playImageView.hidden = NO;
+            [AudioTool.tool startPlayWithModel:model];
+        }
+    }
+    _lastIndexPath = indexPath;
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -89,7 +113,7 @@
         recorderVC.modalPresentationStyle = UIModalPresentationFullScreen;
         __weak typeof(self)weakSelf = self;
         recorderVC.recorderBlock = ^(RecorderModel * _Nonnull model) {
-            [weakSelf.dataArray addObject:model];
+            [weakSelf.dataArray insertObject:model atIndex:0];
             [weakSelf.tableView reloadData];
             [weakSelf storageRecorderData];
         };

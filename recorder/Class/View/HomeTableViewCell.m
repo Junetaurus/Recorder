@@ -13,7 +13,7 @@
 
 @property (nonatomic, strong) UILabel *nameLabel;
 @property (nonatomic, strong) UILabel *timeLabel;
-@property (nonatomic, strong) UIImageView *playImageView;
+@property (nonatomic, strong, readwrite) UIImageView *playImageView;
 
 @end
 
@@ -26,6 +26,8 @@
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
+        self.selectionStyle = UITableViewCellSelectionStyleNone;
+        //
         [self.contentView addSubview:self.nameLabel];
         [self.contentView addSubview:self.timeLabel];
         [self.contentView addSubview:self.playImageView];

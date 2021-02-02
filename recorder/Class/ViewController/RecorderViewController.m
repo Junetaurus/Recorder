@@ -97,6 +97,7 @@
     //
     [_timer invalidate];
     _timer = nil;
+    _countdownTime = 0;
     _timeLabel.text = @"00 : 00";
 }
 
@@ -105,7 +106,7 @@
     //
     NSInteger minute = _countdownTime / 60;
     NSInteger second = _countdownTime % 60;
-    _timeLabel.text = [NSString stringWithFormat:@"%.2ld : %.2ld", (long) minute, (long) second];
+    _timeLabel.text = [NSString stringWithFormat:@"%.2ld : %.2ld", (long)minute, (long)second];
 }
 
 #pragma mark - AudioToolDelegate

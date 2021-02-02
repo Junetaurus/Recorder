@@ -39,7 +39,7 @@
 - (NSString *)getCurrentTime {
     NSDate *date = [NSDate date];
     NSDateFormatter *forMatter = [[NSDateFormatter alloc] init];
-    [forMatter setDateFormat:@"yyyy/MM/dd HH:mm:ss"];
+    [forMatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     return [forMatter stringFromDate:date];
 }
 

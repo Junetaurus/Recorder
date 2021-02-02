@@ -13,6 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface HomeTableViewCell : UITableViewCell
 
+@property (nonatomic, strong, readonly) UIImageView *playImageView;
+
 + (CGFloat)cellHeight;
 
 - (void)bindModel:(RecorderModel *)model;
